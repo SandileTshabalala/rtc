@@ -7,8 +7,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Welcome to the Video Call App hfgyffyftyf</h1>
-    <a href="{{ url_for('call') }}">Start Video Call</a>
+    <header>
+        <h1>Welcome to the Video Call App</h1>
+    </header>
+    <main>
+        <p>Click the link below to start a video call:</p>
+        <a href="{{ url_for('call') }}" class="button">Start Video Call</a>
+    </main>
+    <footer>
+        <p>&copy; 2024 Video Call App</p>
+    </footer>
 </body>
 </html>
-        
