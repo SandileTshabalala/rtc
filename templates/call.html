@@ -12,7 +12,7 @@
     <video id="remote-video" autoplay></video>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
     <script>
-        const socket = io.connect('https://' + document.domain + ':' + location.port);
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
 
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
@@ -28,8 +28,11 @@
             audio: true
         };
 
-        // Join the default room
-        socket.emit('join', { room: '1' });
+        // Get the room name from the user or a predefined source
+        const roomName = 'my-room-name';
+
+        // Join the specified room
+        socket.emit('join', { room: roomName });
 
         // Get user media and set up video element
         navigator.mediaDevices.getUserMedia(constraints)
@@ -46,7 +49,7 @@
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
                     console.log('Sending ICE candidate:', event.candidate);
-                    socket.emit('ice-candidate', { candidate: event.candidate, room: '1' });
+                    socket.emit('ice-candidate', { candidate: event.candidate, room: roomName });
                 }
             };
 
@@ -64,7 +67,7 @@
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
-                socket.emit('answer', { answer: answer, room: '1' });
+                socket.emit('answer', { answer: answer, room: roomName });
             });
 
             socket.on('answer', async data => {
@@ -79,7 +82,6 @@
                     console.error('Error setting remote description:', error);
                 }
             });
-            
 
             socket.on('ice-candidate', async data => {
                 console.log('Received ICE candidate:', data);
@@ -95,9 +97,14 @@
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 console.log('Sending offer:', offer);
-                socket.emit('offer', { offer: offer, room: '1' });
+                socket.emit('offer', { offer: offer, room: roomName });
             })();
         }
+
+        // Handle disconnection
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leave', { room: roomName });
+        });
     </script>
 </body>
 </html>
