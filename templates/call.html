@@ -28,6 +28,9 @@
             audio: true
         };
 
+        // Join the default room
+        socket.emit('join', { room: '1' });
+
         // Get user media and set up video element
         navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
@@ -43,7 +46,7 @@
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
                     console.log('Sending ICE candidate:', event.candidate);
-                    socket.emit('ice-candidate', { candidate: event.candidate });
+                    socket.emit('ice-candidate', { candidate: event.candidate, room: '1' });
                 }
             };
 
@@ -61,7 +64,7 @@
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
-                socket.emit('answer', { answer: answer });
+                socket.emit('answer', { answer: answer, room: '1' });
             });
 
             socket.on('answer', async data => {
@@ -72,7 +75,6 @@
                     console.warn('Skipping setting remote description: not in have-local-offer state');
                 }
             });
-            
 
             socket.on('ice-candidate', async data => {
                 console.log('Received ICE candidate:', data);
@@ -88,7 +90,7 @@
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 console.log('Sending offer:', offer);
-                socket.emit('offer', { offer: offer });
+                socket.emit('offer', { offer: offer, room: '1' });
             })();
         }
     </script>
