@@ -70,10 +70,11 @@
                 socket.emit('answer', { answer: answer, room: roomName });
             });
 
-            socket.on('answer', async data => {
+            socket.on('answer', async (data) => {
                 console.log('Received answer:', data);
                 try {
-                    if (peerConnection.signalingState === "have-local-offer" || peerConnection.signalingState === "stable") {
+                    // Check the signaling state before setting the remote description
+                    if (peerConnection.signalingState === 'have-local-offer' || peerConnection.signalingState === 'stable') {
                         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
                     } else {
                         console.warn('Skipping setting remote description: not in have-local-offer or stable state');
