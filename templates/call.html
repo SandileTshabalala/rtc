@@ -16,7 +16,7 @@
     </div>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
     <script>
-        const socket = io.connect('http://' + document.domain + ':' + location.port);
+        const socket = io.connect('https://' + document.domain + ':' + location.port);
 
         // Get the room name from the user or a predefined source
         const roomName = 'my-room-name';
