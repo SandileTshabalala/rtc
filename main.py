@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -13,18 +13,32 @@ def index():
 def call():
     return render_template('call.html')
 
+@socketio.on('join')
+def on_join(data):
+    room = data.get('room')
+    join_room(room)
+    emit('status', {'msg': f'User has entered the room {room}.'}, room=room)
+
+@socketio.on('leave')
+def on_leave(data):
+    room = data.get('room')
+    leave_room(room)
+    emit('status', {'msg': f'User has left the room {room}.'}, room=room)
+
 @socketio.on('offer')
 def handle_offer(data):
-    emit('offer', data, broadcast=True)
+    room = data.get('room')
+    emit('offer', data, room=room)
 
 @socketio.on('answer')
 def handle_answer(data):
-    emit('answer', data, broadcast=True)
+    room = data.get('room')
+    emit('answer', data, room=room)
 
 @socketio.on('ice-candidate')
 def handle_ice_candidate(data):
-    emit('ice-candidate', data, broadcast=True)
+    room = data.get('room')
+    emit('ice-candidate', data, room=room)
 
 if __name__ == '__main__':
-     socketio.run(app, host="0.0.0.0",debug=True , allow_unsafe_werkzeug=True, port=3000)
-
+    socketio.run(app, host="0.0.0.0", debug=True, allow_unsafe_werkzeug=True, port=3000)

@@ -8,41 +8,53 @@
 </head>
 <body>
     <h1>Video Call</h1>
-    <video id="local-video" autoplay muted></video>
-    <video id="remote-video" autoplay></video>
+    <div id="video-containers">
+        <video id="local-video-1" autoplay muted></video>
+        <video id="remote-video-1" autoplay></video>
+        <video id="local-video-2" autoplay muted></video>
+        <video id="remote-video-2" autoplay></video>
+    </div>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
     <script>
         const socket = io.connect('https://' + document.domain + ':' + location.port);
 
-        const localVideo = document.getElementById('local-video');
-        const remoteVideo = document.getElementById('remote-video');
+        // Get the room name from the user or a predefined source
+        const roomName = 'my-room-name';
 
-        let localStream;
-        let peerConnection;
-        const servers = {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        };
+        // Join the specified room
+        socket.emit('join', { room: roomName });
 
-        const constraints = {
-            video: true,
-            audio: true
-        };
+        // Create two separate peer connections and video elements
+        const peerConnections = [];
+        const localVideos = ['local-video-1', 'local-video-2'];
+        const remoteVideos = ['remote-video-1', 'remote-video-2'];
 
-        // Get user media and set up video element
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(stream => {
-                localStream = stream;
-                localVideo.srcObject = stream;
-                setupPeerConnection();
-            })
-            .catch(error => console.error('Error accessing media devices.', error));
+        for (let i = 0; i < 2; i++) {
+            peerConnections[i] = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
 
-        function setupPeerConnection() {
-            peerConnection = new RTCPeerConnection(servers);
+            const localVideo = document.getElementById(localVideos[i]);
+            const remoteVideo = document.getElementById(remoteVideos[i]);
+
+            let localStream;
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    localStream = stream;
+                    localVideo.srcObject = stream;
+                    setupPeerConnection(peerConnections[i], localStream, remoteVideo, roomName);
+                })
+                .catch(error => console.error('Error accessing media devices.', error));
+        }
+
+        function setupPeerConnection(peerConnection, localStream, remoteVideo, roomName) {
+            // Set up the peer connection and event handlers as before
+            // but use the provided peerConnection, localStream, remoteVideo, and roomName parameters
 
             // Send ICE candidates to the other peer
             peerConnection.onicecandidate = event => {
                 if (event.candidate) {
+                    console.log('Sending ICE candidate:', event.candidate);
                     socket.emit('ice-candidate', { candidate: event.candidate });
                 }
             };
@@ -64,15 +76,20 @@
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
-                socket.emit('answer', { answer: answer });
+                socket.emit('answer', { answer: answer, room: roomName });
             });
 
             // Handle receiving an answer from another peer
             socket.on('answer', async data => {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                console.log('Received answer:', data);
+                if (peerConnection.signalingState === "have-local-offer") {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                } else {
+                    console.warn('Skipping setting remote description: not in have-local-offer state');
+                }
             });
+            
 
-            // Handle receiving an ICE candidate from another peer
             socket.on('ice-candidate', async data => {
                 try {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -85,9 +102,15 @@
             (async function() {
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
+                console.log('Sending offer:', offer);
                 socket.emit('offer', { offer: offer });
             })();
         }
+
+        // Handle disconnection
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leave', { room: roomName });
+        });
     </script>
 </body>
 </html>
