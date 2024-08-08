@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -26,4 +26,4 @@ def handle_ice_candidate(data):
     emit('ice-candidate', data, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0",debug=True , allow_unsafe_werkzeug=True, port=3000)
+    socketio.run(app, debug=True)
