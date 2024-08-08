@@ -1,0 +1,1 @@
+start cmd /k "flask --app main run --port 3000"

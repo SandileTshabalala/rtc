@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Video Call</h1>
+    <video id="local-video" autoplay muted></video>
+    <video id="remote-video" autoplay></video>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        let localStream;
+        let remoteStream;
+        let peerConnection;
+        const servers = null; // Use default STUN servers
+        const constraints = {
+            video: true,
+            audio: true
+        };
+
+        // Get user media and set up video element
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                localStream = stream;
+                document.getElementById('local-video').srcObject = stream;
+                setupPeerConnection();
+            })
+            .catch(error => console.error('Error accessing media devices.', error));
+
+        function setupPeerConnection() {
+            peerConnection = new RTCPeerConnection(servers);
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    socket.emit('ice-candidate', { candidate: event.candidate });
+                }
+            };
+
+            peerConnection.ontrack = event => {
+                remoteStream = event.streams[0];
+                document.getElementById('remote-video').srcObject = remoteStream;
+            };
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            socket.on('offer', async (data) => {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.emit('answer', { answer: answer });
+            });
+
+            socket.on('answer', async (data) => {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            });
+
+            socket.on('ice-candidate', async (data) => {
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                } catch (e) {
+                    console.error('Error adding ice candidate:', e);
+                }
+            });
+
+            // Start call by creating an offer
+            (async function() {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                socket.emit('offer', { offer: offer });
+            })();
+        }
+    </script>
+</body>
+</html>
