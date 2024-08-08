@@ -45,7 +45,7 @@
             .catch(error => console.error('Error accessing media devices.', error));
 
         // Log the peer ID to share with the other user
-        peer.on('open', id => {
+        peer.on('open', id => {  
             console.log('My peer ID is:', id);
             alert(`Your peer ID is: ${id}. Share this ID with the other user.`);
         });
