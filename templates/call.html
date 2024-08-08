@@ -66,8 +66,13 @@
 
             socket.on('answer', async data => {
                 console.log('Received answer:', data);
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                if (peerConnection.signalingState === "have-local-offer") {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                } else {
+                    console.warn('Skipping setting remote description: not in have-local-offer state');
+                }
             });
+            
 
             socket.on('ice-candidate', async data => {
                 console.log('Received ICE candidate:', data);
