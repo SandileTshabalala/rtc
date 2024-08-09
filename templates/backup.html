@@ -9,28 +9,18 @@
 </head>
 <body>
     <h1>Video Call</h1>
-    <div class="video-container">
-        <video id="local-video" autoplay muted></video>
-        <video id="remote-video" autoplay></video>
-    </div>
-    <div class="controls">
-        <button id="mute-btn">Mute</button>
-        <button id="video-btn">Turn Off Video</button>
-    </div>
+    <video id="local-video" autoplay muted></video>
+    <video id="remote-video" autoplay></video>
     <script>
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
-        const muteButton = document.getElementById('mute-btn');
-        const videoButton = document.getElementById('video-btn');
 
         // Create a new Peer instance with a random ID
         const peer = new Peer();
 
         // Get user media and set up local video
-        let localStream;
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(stream => {
-                localStream = stream;
                 localVideo.srcObject = stream;
 
                 // Answer incoming calls
@@ -63,24 +53,6 @@
         // Handle errors
         peer.on('error', error => {
             console.error('PeerJS error:', error);
-        });
-
-        // Mute/unmute audio
-        muteButton.addEventListener('click', () => {
-            const audioTracks = localStream.getAudioTracks();
-            if (audioTracks.length > 0) {
-                audioTracks[0].enabled = !audioTracks[0].enabled;
-                muteButton.textContent = audioTracks[0].enabled ? 'Mute' : 'Unmute';
-            }
-        });
-
-        // Turn video on/off
-        videoButton.addEventListener('click', () => {
-            const videoTracks = localStream.getVideoTracks();
-            if (videoTracks.length > 0) {
-                videoTracks[0].enabled = !videoTracks[0].enabled;
-                videoButton.textContent = videoTracks[0].enabled ? 'Turn Off Video' : 'Turn On Video';
-            }
         });
     </script>
 </body>
