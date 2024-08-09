@@ -11,39 +11,52 @@
     <h1>Video Call</h1>
     <video id="local-video" autoplay muted></video>
     <video id="remote-video" autoplay></video>
+    
     <div class="controls">
         <button id="mute-btn">Mute</button>
         <button id="video-btn">Turn Off Video</button>
+        <button id="end-call-btn">End Call</button> <!-- End Call Button -->
     </div>
+
+    <!-- Incoming Call Dialog -->
+    <div id="incoming-call-dialog" class="dialog" style="display: none;">
+        <p>Incoming Call...</p>
+        <button id="accept-call-btn">Accept</button>
+        <button id="reject-call-btn">Reject</button>
+    </div>
+
     <script>
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
         const muteButton = document.getElementById('mute-btn');
         const videoButton = document.getElementById('video-btn');
+        const endCallButton = document.getElementById('end-call-btn');
+        const incomingCallDialog = document.getElementById('incoming-call-dialog');
+        const acceptCallBtn = document.getElementById('accept-call-btn');
+        const rejectCallBtn = document.getElementById('reject-call-btn');
 
         // Create a new Peer instance with a random ID
         const peer = new Peer();
+        let localStream;
+        let currentCall; // To keep track of the current call
 
         // Get user media and set up local video
-        let localStream;
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
 
-                // Answer incoming calls
+                // Handle incoming calls
                 peer.on('call', call => {
-                    call.answer(stream);
-                    call.on('stream', remoteStream => {
-                        remoteVideo.srcObject = remoteStream;
-                    });
+                    currentCall = call;
+                    incomingCallDialog.style.display = 'block';
                 });
 
                 // Initiate a call if there is a peer ID in the URL
                 const peerId = new URLSearchParams(window.location.search).get('peer_id');
                 if (peerId) {
-                    const call = peer.call(peerId, stream);
-                    call.on('stream', remoteStream => {
+                    currentCall = peer.call(peerId, stream);
+                    currentCall.on('stream', remoteStream => {
                         remoteVideo.srcObject = remoteStream;
                     });
                 } else {
@@ -85,6 +98,35 @@
                 videoTracks[0].enabled = !videoTracks[0].enabled;
                 videoButton.textContent = videoTracks[0].enabled ? 'Turn Off Video' : 'Turn On Video';
             }
+        });
+
+        // Accept incoming call
+        acceptCallBtn.addEventListener('click', () => {
+            incomingCall.answer(localStream);
+            incomingCall.on('stream', remoteStream => {
+                remoteVideo.srcObject = remoteStream;
+            });
+            incomingCallDialog.style.display = 'none';
+            currentCall = incomingCall;
+        });
+
+        // Reject incoming call
+        rejectCallBtn.addEventListener('click', () => {
+            incomingCallDialog.style.display = 'none';
+            window.location.href = '/';  // Redirect to home page or any other page
+        });
+
+        // End the call
+        endCallButton.addEventListener('click', () => {
+            if (currentCall) {
+                currentCall.close();
+            }
+
+            // Stop all local tracks (video and audio)
+            localStream.getTracks().forEach(track => track.stop());
+
+            // Redirect to home page or any other page after ending the call
+            window.location.href = '/';
         });
     </script>
 </body>
