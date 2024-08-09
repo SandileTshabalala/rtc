@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Peers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Available Peers</h1>
+    <ul>
+        {% if peers %}
+            {% for peer in peers %}
+                <li><a href="{{ url_for('call') }}?peer_id={{ peer }}">{{ peer }}</a></li>
+            {% endfor %}
+        {% else %}
+            <li>No peers available</li>
+        {% endif %}
+    </ul>
+    <a href="{{ url_for('index') }}">Back to Home</a>
+</body>
+</html>
