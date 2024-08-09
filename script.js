@@ -91,24 +91,7 @@ videoToggle.addEventListener('click', () => {
     videoToggle.classList.toggle('active');
 });
 
-const joinChatButton = document.getElementById('joinChatButton');
-const exitChatButton = document.getElementById('exitChatButton');
 
-// Function to handle joining chat
-joinChatButton.addEventListener('click', () => {
-    // Show the chat window and input when joining a chat
-    chatWindow.style.display = 'block';
-    document.querySelector('.chat-input').style.display = 'flex';
-
-    // Switch button visibility
-    joinChatButton.style.display = 'none';
-    exitChatButton.style.display = 'inline-block';
-
-    // Optionally, you could load the selected client's conversation here
-    loadConversation(clientSelect.value);
-});
-
-// Function to handle exiting chat
 exitChatButton.addEventListener('click', () => {
     // Hide the chat window and input when exiting a chat
     chatWindow.style.display = 'none';

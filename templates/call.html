@@ -50,10 +50,13 @@
                     alert('No peer ID provided. Please provide a peer ID in the URL.');
                 }
             })
-            .catch(error => console.error('Error accessing media devices.', error));
+            .catch(error => {
+                console.error('Error accessing media devices.', error);
+                alert('Error accessing media devices: ' + error.message);
+            });
 
         // Log the peer ID to share with the other user
-        peer.on('open', id => {  
+        peer.on('open', id => {
             console.log('My peer ID is:', id);
             alert(`Your peer ID is: ${id}. Share this ID with the other user.`);
             // Optionally, send the peer ID to the index page
@@ -63,6 +66,7 @@
         // Handle errors
         peer.on('error', error => {
             console.error('PeerJS error:', error);
+            alert('PeerJS error: ' + error.message);
         });
 
         // Mute/unmute audio
