@@ -9,10 +9,8 @@
 </head>
 <body>
     <h1>Video Call</h1>
-    <div class="video-container">
-        <video id="local-video" autoplay muted></video>
-        <video id="remote-video" autoplay></video>
-    </div>
+    <video id="local-video" autoplay muted></video>
+    <video id="remote-video" autoplay></video>
     <div class="controls">
         <button id="mute-btn">Mute</button>
         <button id="video-btn">Turn Off Video</button>
@@ -58,6 +56,8 @@
         peer.on('open', id => {  
             console.log('My peer ID is:', id);
             alert(`Your peer ID is: ${id}. Share this ID with the other user.`);
+            // Optionally, send the peer ID to the index page
+            fetch('/call?peer_id=' + encodeURIComponent(id), { method: 'GET' });
         });
 
         // Handle errors

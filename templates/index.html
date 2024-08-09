@@ -3,12 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Call App</title>
+    <title>Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Welcome to the Video Call App</h1>
-    <a href="{{ url_for('call') }}">Start Video Call</a>
+    <h2>Your Peer ID:</h2>
+    <p id="peer-id">Fetching...</p>
+    <h2>Available Peers:</h2>
+    <ul>
+        {% for peer in peers %}
+        <li><a href="{{ url_for('call') }}?peer_id={{ peer }}">{{ peer }}</a></li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('call') }}">Start a Call</a>
+    <script>
+        // Fetch the peer ID from the URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const peerId = urlParams.get('peer_id');
+
+        if (peerId) {
+            document.getElementById('peer-id').textContent = peerId;
+            // Optionally, you can send this peer ID to the backend for storage
+            fetch('/call?peer_id=' + encodeURIComponent(peerId), { method: 'GET' });
+        } else {
+            document.getElementById('peer-id').textContent = 'Not available';
+        }
+    </script>
 </body>
 </html>
-    
