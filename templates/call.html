@@ -34,24 +34,25 @@
         const incomingCallDialog = document.getElementById('incoming-call-dialog');
         const acceptCallBtn = document.getElementById('accept-call-btn');
         const rejectCallBtn = document.getElementById('reject-call-btn');
-
+    
         // Create a new Peer instance with a random ID
         const peer = new Peer();
         let localStream;
         let currentCall; // To keep track of the current call
-
+        let incomingCall; // Define incomingCall here
+    
         // Get user media and set up local video
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
-
+    
                 // Handle incoming calls
                 peer.on('call', call => {
-                    currentCall = call;
+                    incomingCall = call;  // Assign the incoming call to the variable
                     incomingCallDialog.style.display = 'block';
                 });
-
+    
                 // Initiate a call if there is a peer ID in the URL
                 const peerId = new URLSearchParams(window.location.search).get('peer_id');
                 if (peerId) {
@@ -67,7 +68,7 @@
                 console.error('Error accessing media devices.', error);
                 alert('Error accessing media devices: ' + error.message);
             });
-
+    
         // Log the peer ID to share with the other user
         peer.on('open', id => {
             console.log('My peer ID is:', id);
@@ -75,13 +76,13 @@
             // Optionally, send the peer ID to the index page
             fetch('/call?peer_id=' + encodeURIComponent(id), { method: 'GET' });
         });
-
+    
         // Handle errors
         peer.on('error', error => {
             console.error('PeerJS error:', error);
             alert('PeerJS error: ' + error.message);
         });
-
+    
         // Mute/unmute audio
         muteButton.addEventListener('click', () => {
             const audioTracks = localStream.getAudioTracks();
@@ -90,7 +91,7 @@
                 muteButton.textContent = audioTracks[0].enabled ? 'Mute' : 'Unmute';
             }
         });
-
+    
         // Turn video on/off
         videoButton.addEventListener('click', () => {
             const videoTracks = localStream.getVideoTracks();
@@ -99,7 +100,7 @@
                 videoButton.textContent = videoTracks[0].enabled ? 'Turn Off Video' : 'Turn On Video';
             }
         });
-
+    
         // Accept incoming call
         acceptCallBtn.addEventListener('click', () => {
             incomingCall.answer(localStream);
@@ -109,25 +110,26 @@
             incomingCallDialog.style.display = 'none';
             currentCall = incomingCall;
         });
-
+    
         // Reject incoming call
         rejectCallBtn.addEventListener('click', () => {
             incomingCallDialog.style.display = 'none';
             window.location.href = '/';  // Redirect to home page or any other page
         });
-
+    
         // End the call
         endCallButton.addEventListener('click', () => {
             if (currentCall) {
                 currentCall.close();
             }
-
+    
             // Stop all local tracks (video and audio)
             localStream.getTracks().forEach(track => track.stop());
-
+    
             // Redirect to home page or any other page after ending the call
             window.location.href = '/';
         });
     </script>
+    
 </body>
 </html>
